@@ -7,7 +7,7 @@ APPLICATION_NAME = SafetyShield
 
 SafetyShield_FILES = main.m AppDelegate.m ViewController.m
 SafetyShield_FRAMEWORKS = UIKit CoreGraphics QuartzCore
-SafetyShield_CFLAGS = -fobjc-arc
+SafetyShield_CFLAGS = -fobjc-arc -Wno-error=deprecated-declarations
 
 include $(THEOS_MAKE_PATH)/application.mk
 

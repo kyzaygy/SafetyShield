@@ -285,19 +285,8 @@
     NSURL *web = [NSURL URLWithString:@"https://t.me/safetyshield"];
 
     UIApplication *app = [UIApplication sharedApplication];
-    if ([app canOpenURL:tg]) {
-        if (@available(iOS 10.0, *)) {
-            [app openURL:tg options:@{} completionHandler:nil];
-        } else {
-            [app openURL:tg];
-        }
-    } else {
-        if (@available(iOS 10.0, *)) {
-            [app openURL:web options:@{} completionHandler:nil];
-        } else {
-            [app openURL:web];
-        }
-    }
+    NSURL *target = [app canOpenURL:tg] ? tg : web;
+    [app openURL:target options:@{} completionHandler:nil];
 }
 
 @end
