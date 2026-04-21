@@ -1,0 +1,8 @@
+SafetyShield/.theos/
+SafetyShield/packages/
+SafetyShield/obj/
+SafetyShield/ipa_build/
+SafetyShield/*.ipa
+SafetyShield/*.deb
+.DS_Store
+*.swp

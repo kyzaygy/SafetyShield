@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/c/**)",
+      "Bash(dir C:\\\\\\\\SafetyShield\\\\\\\\)",
+      "Bash(wsl --list --verbose)",
+      "Bash(where theos *)",
+      "Bash(wsl bash *)"
+    ]
+  }
+}

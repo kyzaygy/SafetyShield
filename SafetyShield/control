@@ -1,0 +1,9 @@
+Package: com.safetyshield.app
+Name: SafetyShield
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: SafetyShield - cybersecurity hub with a one-tap link to the @safetyshield Telegram channel. Dark neon UI.
+Maintainer: SafetyShield
+Author: SafetyShield
+Section: Applications
+Depends: firmware (>= 13.0)

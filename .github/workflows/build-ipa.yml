@@ -1,0 +1,59 @@
+name: Build SafetyShield IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+
+      - name: Install iOS SDK
+        run: |
+          cd $HOME/theos/sdks
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip -q master.zip
+          mv sdks-master/*.sdk .
+          rm -rf sdks-master master.zip
+
+      - name: Build .deb package
+        working-directory: SafetyShield
+        run: |
+          export THEOS=$HOME/theos
+          make package FINALPACKAGE=1
+
+      - name: Convert .deb to .ipa
+        working-directory: SafetyShield
+        run: |
+          DEB=$(ls packages/*.deb | head -n1)
+          mkdir -p ipa_build/Payload
+          dpkg-deb -x "$DEB" ipa_build/extracted
+          APP_PATH=$(find ipa_build/extracted -name "*.app" -type d | head -n1)
+          cp -R "$APP_PATH" ipa_build/Payload/
+          cd ipa_build
+          zip -qr ../SafetyShield.ipa Payload
+          cd ..
+          ls -lh SafetyShield.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SafetyShield-IPA
+          path: SafetyShield/SafetyShield.ipa
+          retention-days: 30
+
+      - name: Upload DEB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SafetyShield-DEB
+          path: SafetyShield/packages/*.deb
+          retention-days: 30
