@@ -8,37 +8,59 @@ on:
 jobs:
   build:
     runs-on: macos-14
+    env:
+      THEOS: ${{ github.workspace }}/theos
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Theos
+      - name: Install build dependencies
         run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
-          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+          brew update
+          brew install ldid xz dpkg make coreutils findutils gnu-sed || true
+          # ensure GNU make is available as 'gmake' (it already is on GH runners)
+          which gmake || brew install make
+          which ldid
+          which dpkg-deb
+
+      - name: Clone Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          ls "$THEOS"
 
       - name: Install iOS SDK
         run: |
-          cd $HOME/theos/sdks
-          curl -LO https://github.com/theos/sdks/archive/master.zip
-          unzip -q master.zip
+          mkdir -p "$THEOS/sdks"
+          cd "$THEOS/sdks"
+          curl -L -o sdks.zip https://github.com/theos/sdks/archive/refs/heads/master.zip
+          unzip -q sdks.zip
+          # merge contents in, don't try to mv over existing dirs
           rsync -a sdks-master/ ./
-          rm -rf sdks-master master.zip
-          ls -la | head -30
+          rm -rf sdks-master sdks.zip
+          echo "--- Installed SDKs ---"
+          ls -d *.sdk 2>/dev/null || true
 
       - name: Build .deb package
         working-directory: SafetyShield
         run: |
-          export THEOS=$HOME/theos
-          make package FINALPACKAGE=1
+          echo "THEOS=$THEOS"
+          ls -d "$THEOS/sdks"/iPhoneOS*.sdk 2>/dev/null || (echo "No iPhoneOS SDK found!" && exit 1)
+          gmake clean || true
+          gmake package FINALPACKAGE=1
+          echo "--- Produced packages ---"
+          ls -lh packages/
 
       - name: Convert .deb to .ipa
         working-directory: SafetyShield
         run: |
+          set -e
           DEB=$(ls packages/*.deb | head -n1)
+          echo "Using deb: $DEB"
+          rm -rf ipa_build
           mkdir -p ipa_build/Payload
           dpkg-deb -x "$DEB" ipa_build/extracted
           APP_PATH=$(find ipa_build/extracted -name "*.app" -type d | head -n1)
+          echo "App path: $APP_PATH"
           cp -R "$APP_PATH" ipa_build/Payload/
           cd ipa_build
           zip -qr ../SafetyShield.ipa Payload
@@ -51,6 +73,7 @@ jobs:
           name: SafetyShield-IPA
           path: SafetyShield/SafetyShield.ipa
           retention-days: 30
+          if-no-files-found: error
 
       - name: Upload DEB artifact
         uses: actions/upload-artifact@v4
@@ -58,3 +81,4 @@ jobs:
           name: SafetyShield-DEB
           path: SafetyShield/packages/*.deb
           retention-days: 30
+          if-no-files-found: warn
