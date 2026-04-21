@@ -174,8 +174,8 @@
 
 - (void)setupFeatureChips {
     NSArray *titles = @[
-        @"\uD83D\uDD10 \u0428\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u0438\u0435",
-        @"\uD83D\uDC41 OSINT",
+        @"\U0001F510 \u0428\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u0438\u0435",
+        @"\U0001F441 OSINT",
         @"\u26A1 0-day"
     ];
 
