@@ -4,10 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
 
 jobs:
   build:
     runs-on: macos-14
+    permissions:
+      contents: write
     env:
       THEOS: ${{ github.workspace }}/theos
     steps:
@@ -82,3 +85,27 @@ jobs:
           path: SafetyShield/packages/*.deb
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: SafetyShield ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            SafetyShield/SafetyShield.ipa
+            SafetyShield/packages/*.deb
+          body: |
+            # SafetyShield ${{ github.ref_name }}
+
+            iOS-приложение в стиле кибербезопасности с прямой ссылкой на [@safetyshield](https://t.me/safetyshield).
+
+            ## Установка
+            - **TrollStore** — открой `SafetyShield.ipa` → Install
+            - **Sileo/Zebra** (джейл) — поставь `SafetyShield_*.deb`
+
+            Прямая ссылка на последний `.ipa`:
+            `https://github.com/${{ github.repository }}/releases/latest/download/SafetyShield.ipa`
